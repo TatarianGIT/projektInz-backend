@@ -21,7 +21,7 @@ export const authRouter = express.Router();
 
 authRouter.post(
   "/register",
-//   validate(registerSchema),
+  //   validate(registerSchema),
   async (req, res, next) => {
     try {
       const { email, password } = req.body;
@@ -49,20 +49,22 @@ authRouter.post(
         userId: newUser.id,
       });
 
-      return res
-        .status(200)
-        // .cookie("accessToken", accessToken, {
-        //   httpOnly: true,
-        //   secure: process.env.NODE_ENV === "production",
-        // })
-        // .cookie("refreshToken", refreshToken, {
-        //   httpOnly: true,
-        //   secure: process.env.NODE_ENV === "production",
-        // })
-        .json({
-          accessToken,
-          refreshToken,
-        });
+      return (
+        res
+          .status(200)
+          // .cookie("accessToken", accessToken, {
+          //   httpOnly: true,
+          //   secure: process.env.NODE_ENV === "production",
+          // })
+          // .cookie("refreshToken", refreshToken, {
+          //   httpOnly: true,
+          //   secure: process.env.NODE_ENV === "production",
+          // })
+          .json({
+            accessToken,
+            refreshToken,
+          })
+      );
     } catch (err) {
       next(err);
     }
@@ -105,6 +107,7 @@ authRouter.post("/login", async (req, res, next) => {
     res.status(200).json({
       accessToken,
       refreshToken,
+      email: existingUser.email,
     });
   } catch (err) {
     next(err);
