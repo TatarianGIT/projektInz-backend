@@ -16,8 +16,15 @@ import {
   deleteRefreshToken,
   findRefreshTokenById,
 } from "./auth.services";
+import { isAuthenticated } from "../../middleware/isAuthenticated";
 
 export const authRouter = express.Router();
+
+authRouter.get("/test", isAuthenticated, async (req, res, next) => {
+  res.status(200).json({
+    ok: "okok",
+  });
+});
 
 authRouter.post(
   "/register",
