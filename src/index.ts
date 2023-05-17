@@ -33,27 +33,25 @@ app.use((_req, res, _next) => {
 /** Server */
 const httpServer = http.createServer(app);
 const PORT: any = process.env.PORT ?? 6060;
-httpServer.listen(PORT, () =>
-  console.log(`The server is running on port ${PORT}`)
-);
 
+/**Socket.IO Server */
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:6060",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
 io.on("connection", (socket) => {
-  console.log("New client connected!");
-
-  socket.on("message", (message) => {
-    console.log(`Client message: ${message}`);
-
-    io.emit("message", `Server: Message recived "${message}"`);
-  });
+  console.log(`New client connected`);
 
   socket.on("disconnect", () => {
-    console.log("Klient rozłączony");
+    console.log("Client disconnected");
   });
 });
+
+/**Server listen message */
+httpServer.listen(PORT, () =>
+  console.log(`The server is running on port ${PORT}`)
+);
