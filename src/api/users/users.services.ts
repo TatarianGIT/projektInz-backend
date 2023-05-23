@@ -9,7 +9,16 @@ export const findUserByEmail = (email: string) => {
   });
 };
 
-export const createUserByEmailAndPassword = async (
+export const findUserByUsername = (username: string) => {
+  return prisma.user.findUnique({
+    where: {
+      username,
+    },
+  });
+};
+
+export const createUser = async (
+  username: string,
   email: string,
   password: string
 ) => {
@@ -17,6 +26,7 @@ export const createUserByEmailAndPassword = async (
 
   return prisma.user.create({
     data: {
+      username,
       email,
       password: hashedPassword,
     },

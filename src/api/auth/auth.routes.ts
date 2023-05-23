@@ -6,8 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 import { hashToken } from "../../utils/hashToken";
 import { generateTokens } from "../../utils/jwt";
 import {
-  createUserByEmailAndPassword,
+  createUser,
   findUserByEmail,
+  findUserByUsername,
   findUserById,
 } from "../users/users.services";
 // import { registerSchema } from "./auth.schemas";
@@ -31,23 +32,30 @@ authRouter.post(
   //   validate(registerSchema),
   async (req, res, next) => {
     try {
-      const { email, password } = req.body;
+      const { username, email, password } = req.body;
 
-      if (!email || !password) {
+      if (!username || !email || !password) {
         return res.status(400).json({
-          message: "You must provide an email and password",
+          message: "You must provide an username, email and password",
         });
       }
 
-      const isExistingUser = await findUserByEmail(email);
+      const isExistingEmail = await findUserByEmail(email);
+      const isExistingUsername = await findUserByUsername(username);
 
-      if (isExistingUser) {
+      if (isExistingEmail) {
         return res.status(400).json({
           message: "Email already in use",
         });
       }
 
-      const newUser = await createUserByEmailAndPassword(email, password);
+      if (isExistingUsername) {
+        return res.status(400).json({
+          message: "Username already in use",
+        });
+      }
+
+      const newUser = await createUser(username, email, password);
       const jti = uuidv4();
       const { accessToken, refreshToken } = generateTokens(newUser.id, jti);
       await addRefreshTokenToWhitelist({
@@ -115,6 +123,7 @@ authRouter.post("/login", async (req, res, next) => {
       accessToken,
       refreshToken,
       email: existingUser.email,
+      username: existingUser.username,
     });
   } catch (err) {
     next(err);
