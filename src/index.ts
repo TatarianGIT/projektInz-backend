@@ -25,7 +25,7 @@ app.use("/auth", authRouter);
 
 /** Error handling */
 app.use((_req, res, _next) => {
-  const error = new Error("Not found");
+  const error = new Error("Nie znaleziono");
   return res.status(404).json({
     message: error.message,
   });
@@ -48,32 +48,27 @@ let chatRoom: any = "";
 let allUsers: any = [];
 
 io.on("connection", (socket) => {
-  console.log("New client connected", socket.id);
+  console.log("Połączony nowy klient", socket.id);
 
   socket.on("joinRoom", (data) => {
-    const { room, email } = data;
+    const { room, email, username } = data;
     allUsers = leaveRoom(socket.id, allUsers);
     const userExistsInRoom = allUsers.some(
-      (user: any) => user.room === room && user.email === email
+      (user: any) => user.room === room && user.username === username
     );
 
     if (!userExistsInRoom) {
       socket.join(room);
-      console.log(email, "połączono z", room);
+      console.log(username, "połączono z", room);
       socket.emit("setRoom", room);
       chatRoom = room;
-      allUsers.push({ id: socket.id, room, email });
-
-      let creationTime = Date.now(); // Current timestamp
-      // Send message to all users currently in the room, apart from the user that just joined
+      allUsers.push({ id: socket.id, room, username });
+      let creationTime = Date.now();
       socket.to(room).emit("receiveMessage", {
-        creationTime,
-        message: `Użytkownik ${email} dołączył do kanału`,
+        message: `Użytkownik ${username} dołączył do kanału`,
       });
-      // Send welcome msg to user that just joined chat only
       socket.emit("receiveMessage", {
-        creationTime,
-        message: `Witaj ${email} na kanale ${room}`,
+        message: `Witaj ${username} na kanale ${room}`,
       });
     }
 
@@ -84,11 +79,11 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", (data) => {
     const { message, email, room, creationTime } = data;
-    io.in(room).emit("receiveMessage", data); // Send to all users in room, including sender
+    io.in(room).emit("receiveMessage", data);
   });
 
   socket.on("leaveRoom", (data) => {
-    const { email, room } = data;
+    const { email, room, username } = data;
     socket.leave(room);
     socket.emit("setRoom", "");
     socket.emit("setMessages", []);
@@ -98,20 +93,20 @@ io.on("connection", (socket) => {
 
     let creationTime = Date.now();
     socket.to(room).emit("receiveMessage", {
-      message: `${email} opuścił kanał`,
+      message: `Użytkownik ${username} opuścił kanał`,
       creationTime,
     });
-    console.log(email, "opuszczono pokój", room);
+    console.log(username, "opuszczono pokój", room);
   });
 
   socket.on("disconnect", () => {
-    console.log("Client disconnected", socket.id);
+    console.log("Klient rozłączony", socket.id);
     const user = allUsers.find((user: any) => user.id == socket.id);
     if (user?.username) {
       allUsers = leaveRoom(socket.id, allUsers);
       socket.to(chatRoom).emit("chatRoomUsers", allUsers);
       socket.to(chatRoom).emit("receiveMessage", {
-        message: `${user.username} has disconnected from the chat.`,
+        message: `Użytkownik ${user.username} został rozłączony z kanałem.`,
       });
     }
   });

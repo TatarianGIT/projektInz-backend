@@ -36,7 +36,7 @@ authRouter.post(
 
       if (!username || !email || !password) {
         return res.status(400).json({
-          message: "You must provide an username, email and password",
+          message: "Nazwa użytkownika, adres e-mail oraz hasło są wymagane!",
         });
       }
 
@@ -45,13 +45,13 @@ authRouter.post(
 
       if (isExistingEmail) {
         return res.status(400).json({
-          message: "Email already in use",
+          message: "Konto o takim adresie e-mail juz istnieje!",
         });
       }
 
       if (isExistingUsername) {
         return res.status(400).json({
-          message: "Username already in use",
+          message: "Konto o takiej nazwie użytkownika juz istnieje",
         });
       }
 
@@ -92,7 +92,7 @@ authRouter.post("/login", async (req, res, next) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        message: "You must provide an email and a password.",
+        message: "Adres e-mail oraz hasło są wymagane.",
       });
     }
 
@@ -100,14 +100,14 @@ authRouter.post("/login", async (req, res, next) => {
 
     if (!existingUser) {
       return res.status(404).json({
-        message: "User not found",
+        message: "Podany użytkownik nie istnieje!",
       });
     }
 
     const validPassword = await bcrypt.compare(password, existingUser.password);
     if (!validPassword) {
       return res.status(403).json({
-        message: "Invalid login credentials.",
+        message: "Nieprawidłowe dane logowania.",
       });
     }
 
@@ -136,7 +136,7 @@ authRouter.post("/refresh-token", async (req, res, next) => {
 
     if (!refreshToken) {
       res.status(400).json({
-        message: "Missing refresh token.",
+        message: "Brak refresh token.",
       });
     }
 
@@ -149,14 +149,14 @@ authRouter.post("/refresh-token", async (req, res, next) => {
 
     if (!savedRefreshToken || savedRefreshToken.revoked === true) {
       return res.status(401).json({
-        message: "Unauthorized",
+        message: "Nieautoryzowany",
       });
     }
 
     const hashedToken = hashToken(refreshToken);
     if (hashedToken !== savedRefreshToken.hashedToken) {
       return res.status(401).json({
-        message: "Unauthorized",
+        message: "Nieautoryzowany",
       });
     }
 
@@ -164,7 +164,7 @@ authRouter.post("/refresh-token", async (req, res, next) => {
     const user = await findUserById(payload?.userId as string);
     if (!user) {
       return res.status(401).json({
-        message: "Unauthorized",
+        message: "Nieautoryzowany",
       });
     }
 

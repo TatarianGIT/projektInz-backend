@@ -10,7 +10,7 @@ export const isAuthenticated = (
 
   if (!authorization) {
     return res.status(401).json({
-      message: "Un-Authorized",
+      message: "Brak autoryzacji",
     });
   }
 
@@ -20,7 +20,7 @@ export const isAuthenticated = (
     req.body = payload;
   } catch (err) {
     res.status(401).json({
-      message: "Un-Authorized",
+      message: "Brak autoryzacji",
     });
   }
 
