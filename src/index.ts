@@ -7,6 +7,7 @@ import morgan from "morgan";
 import { authRouter } from "./api/auth/auth.routes";
 import { Server, Socket } from "socket.io";
 import leaveRoom from "./utils/leaveRoom";
+import { prisma } from "./db/client";
 
 // import { authRouter } from "./api/auth/auth.routes";
 // import { usersRouter } from "./api/users/users.routes";
@@ -50,7 +51,7 @@ let allUsers: any = [];
 io.on("connection", (socket) => {
   console.log("Połączony nowy klient", socket.id);
 
-  socket.on("joinRoom", (data) => {
+  socket.on("joinRoom", async (data) => {
     const { room, email, username } = data;
     allUsers = leaveRoom(socket.id, allUsers);
     const userExistsInRoom = allUsers.some(
@@ -70,6 +71,30 @@ io.on("connection", (socket) => {
       socket.emit("receiveMessage", {
         message: `Witaj ${username} na kanale ${room}`,
       });
+
+      const messages = await prisma.message.findMany({
+        orderBy: { creationTime: "desc" },
+        take: 100,
+        include: { User: true },
+      });
+
+      const formatedMessage = messages?.map((item) => {
+        return {
+          message: item.message,
+          email: item.User.email,
+          creationTime: item.creationTime,
+          username: item.User.username,
+        };
+      });
+
+      const firstMessages = [
+        ...formatedMessage,
+        {
+          message: `Witaj ${username} na kanale ${room}`,
+        },
+      ];
+
+      socket.emit("getLastMessages", firstMessages);
     }
 
     const chatRoomUsers = allUsers.filter((user: any) => user.room === room);
@@ -77,9 +102,27 @@ io.on("connection", (socket) => {
     socket.emit("chatRoomUsers", chatRoomUsers);
   });
 
-  socket.on("sendMessage", (data) => {
-    const { message, email, room, creationTime } = data;
-    io.in(room).emit("receiveMessage", data);
+  socket.on("sendMessage", async (data) => {
+    try {
+      const { message, room, creationTime } = data;
+      io.in(room).emit("receiveMessage", data);
+      const user = await prisma.user.findUnique({
+        where: { username: data.username },
+      });
+      if (!user) {
+        return console.log("Error brak User");
+      }
+      await prisma.message.create({
+        data: {
+          message,
+          room,
+          creationTime: new Date(creationTime),
+          userId: user.id,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+    }
   });
 
   socket.on("leaveRoom", (data) => {

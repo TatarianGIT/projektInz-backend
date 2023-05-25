@@ -27,64 +27,48 @@ authRouter.get("/test", isAuthenticated, async (req, res, next) => {
   });
 });
 
-authRouter.post(
-  "/register",
-  //   validate(registerSchema),
-  async (req, res, next) => {
-    try {
-      const { username, email, password } = req.body;
+authRouter.post("/register", async (req, res, next) => {
+  try {
+    const { username, email, password } = req.body;
 
-      if (!username || !email || !password) {
-        return res.status(400).json({
-          message: "Nazwa użytkownika, adres e-mail oraz hasło są wymagane!",
-        });
-      }
-
-      const isExistingEmail = await findUserByEmail(email);
-      const isExistingUsername = await findUserByUsername(username);
-
-      if (isExistingEmail) {
-        return res.status(400).json({
-          message: "Konto o takim adresie e-mail juz istnieje!",
-        });
-      }
-
-      if (isExistingUsername) {
-        return res.status(400).json({
-          message: "Konto o takiej nazwie użytkownika juz istnieje",
-        });
-      }
-
-      const newUser = await createUser(username, email, password);
-      const jti = uuidv4();
-      const { accessToken, refreshToken } = generateTokens(newUser.id, jti);
-      await addRefreshTokenToWhitelist({
-        jti,
-        refreshToken,
-        userId: newUser.id,
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        message: "Nazwa użytkownika, adres e-mail oraz hasło są wymagane!",
       });
-
-      return (
-        res
-          .status(200)
-          // .cookie("accessToken", accessToken, {
-          //   httpOnly: true,
-          //   secure: process.env.NODE_ENV === "production",
-          // })
-          // .cookie("refreshToken", refreshToken, {
-          //   httpOnly: true,
-          //   secure: process.env.NODE_ENV === "production",
-          // })
-          .json({
-            accessToken,
-            refreshToken,
-          })
-      );
-    } catch (err) {
-      next(err);
     }
+
+    const isExistingEmail = await findUserByEmail(email);
+    const isExistingUsername = await findUserByUsername(username);
+
+    if (isExistingEmail) {
+      return res.status(400).json({
+        message: "Konto o takim adresie e-mail juz istnieje!",
+      });
+    }
+
+    if (isExistingUsername) {
+      return res.status(400).json({
+        message: "Konto o takiej nazwie użytkownika juz istnieje",
+      });
+    }
+
+    const newUser = await createUser(username, email, password);
+    const jti = uuidv4();
+    const { accessToken, refreshToken } = generateTokens(newUser.id, jti);
+    await addRefreshTokenToWhitelist({
+      jti,
+      refreshToken,
+      userId: newUser.id,
+    });
+
+    return res.status(200).json({
+      accessToken,
+      refreshToken,
+    });
+  } catch (err) {
+    next(err);
   }
-);
+});
 
 authRouter.post("/login", async (req, res, next) => {
   try {

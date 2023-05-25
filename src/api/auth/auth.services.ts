@@ -42,7 +42,7 @@ export const deleteRefreshToken = (id: string) => {
 };
 
 export const revokeTokens = (userId: string) => {
-    return prisma.refreshToken.updateMany({
+  return prisma.refreshToken.updateMany({
     where: {
       userId,
     },

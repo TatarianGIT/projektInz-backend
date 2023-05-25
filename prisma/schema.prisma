@@ -18,6 +18,7 @@ model User {
     refreshTokens RefreshToken[]
     createdAt     DateTime       @default(now())
     updatedAt     DateTime       @updatedAt
+    Message       Message[]
 }
 
 model RefreshToken {
@@ -28,4 +29,13 @@ model RefreshToken {
     revoked     Boolean  @default(false)
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+}
+
+model Message {
+    id           String   @id @unique @default(uuid())
+    message      String
+    room         String
+    userId       String
+    User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    creationTime DateTime @default(now())
 }
