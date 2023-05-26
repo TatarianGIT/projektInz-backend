@@ -73,7 +73,7 @@ io.on("connection", (socket) => {
       });
 
       const messages = await prisma.message.findMany({
-        orderBy: { creationTime: "desc" },
+        orderBy: { creationTime: "asc" },
         take: 100,
         include: { User: true },
       });
