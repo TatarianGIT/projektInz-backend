@@ -74,8 +74,8 @@ io.on("connection", (socket) => {
 
       const messages = await prisma.message.findMany({
         orderBy: { creationTime: "asc" },
-        take: 100,
         include: { User: true },
+        where: { room },
       });
 
       const formatedMessage = messages?.map((item) => {
